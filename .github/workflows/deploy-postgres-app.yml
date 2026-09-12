@@ -79,6 +79,7 @@ jobs:
             done
           else
             for DATABASE_NAME in $LINKED_DATABASES"; do
+              echo cloning "$DATABASE_NAME"
               dokku postgres:clone "$DATABASE_NAME" "${REVIEW_APP_NAME}_DB"
               CLONED_DATABASES+=("${REVIEW_APP_NAME}_DB")
             done
