@@ -72,13 +72,13 @@ jobs:
           elif [[ "$DB_COUNT" -gt 1 ]]; then
             echo "::warning::warning: App template to create review-apps $TEMPLATE_APP_NAME has more than one linked database. Continuing..." 
             DB_COUNTER=1
-            for DATABASE_NAME in $LINKED_DATABASES"; do
+            for DATABASE_NAME in "$LINKED_DATABASES"; do
               dokku postgres:clone "$DATABASE_NAME" "${REVIEW_APP_NAME}_DB_${DB_COUNTER}"
               CLONED_DATABASES+=("${REVIEW_APP_NAME}_DB_${DB_COUNTER}")
               DB_COUNTER=$((DB_COUNTER+1))
             done
           else
-            for DATABASE_NAME in $LINKED_DATABASES"; do
+            for DATABASE_NAME in "$LINKED_DATABASES"; do
               echo cloning "$DATABASE_NAME"
               dokku postgres:clone "$DATABASE_NAME" "${REVIEW_APP_NAME}_DB"
               CLONED_DATABASES+=("${REVIEW_APP_NAME}_DB")
@@ -87,7 +87,7 @@ jobs:
           
           dokku apps:clone "$TEMPLATE_APP_NAME" "$REVIEW_APP_NAME" --skip-deploy
           for DATABASE_NAME in "$LINKED_DATABASES"; do 
-            dokku postgres:unlink --no-restart "$DATABASE_NAME" "$REVIEW_APP_NAME" 
+            dokku postgres:unlink "$DATABASE_NAME" "$REVIEW_APP_NAME" --no-restart true
           done
           
           for DATABASE_NAME in "${CLONED_DATABASES[@]}"; do
