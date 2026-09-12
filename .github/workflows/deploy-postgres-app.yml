@@ -19,44 +19,19 @@ concurrency:
   cancel-in-progress: false
   queue: max
 
-
 permissions:
   id-token: write
+  actions: read
+  contents: read
+  pull-requests: read
 
 jobs:
-  examine-queue:
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-    outputs:
-      should_continue: ${{ steps.check-queue.outputs.should_continue }}
-    steps:
-      - name: Examine Job Queue
-        id: check-queue
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GROUP: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-        run: |
-          behind=$(gh api "repos/${{ github.repository }}/actions/concurrency_groups/${group}?per_page=100" \
-            --jq --arg run_id "${{ github.run_id }}" '
-              (.group_members | to_entries | map(select(.value.run_id == ($run_id | tonumber))) | .[0].key) as $idx
-              | .total_count - $idx - 1
-            ')
-          if [[ $behind -gt 0 ]]; then
-              echo "should_continue=false" >> "$GITHUB_OUTPUT" 
-          else
-              echo "should_continue=true" >> "$GITHUB_OUTPUT" 
-          fi
-
   deploy:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
       pull-requests: read
-    needs:
-      examine-queue
-    if: needs.examine-queue.outputs.should_continue == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v7
