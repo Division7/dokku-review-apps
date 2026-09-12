@@ -73,14 +73,14 @@ jobs:
             echo "::warning::warning: App template to create review-apps $TEMPLATE_APP_NAME has more than one linked database. Continuing..." 
             DB_COUNTER=1
             for DATABASE_NAME in $LINKED_DATABASES"; do
-              dokku postgres:clone "$DATABASE_NAME" "${REVIEW_APP_NAME}_DB_$DB_COUNTER"
-              CLONED_DATABASES+=("$REVIEW_APP_NAME_DB_$DB_COUNTER")
+              dokku postgres:clone "$DATABASE_NAME" "${REVIEW_APP_NAME}_DB_${DB_COUNTER}"
+              CLONED_DATABASES+=("${REVIEW_APP_NAME}_DB_${DB_COUNTER}")
               DB_COUNTER=$((DB_COUNTER+1))
             done
           else
             for DATABASE_NAME in $LINKED_DATABASES"; do
               dokku postgres:clone "$DATABASE_NAME" "${REVIEW_APP_NAME}_DB"
-              CLONED_DATABASES+=("$REVIEW_APP_NAME_DB")
+              CLONED_DATABASES+=("${REVIEW_APP_NAME}_DB")
             done
           fi
           
