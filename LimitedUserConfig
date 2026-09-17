@@ -1,0 +1,26 @@
+Match User dokkudeploy
+  AllowTcpForwarding yes
+  X11Forwarding no
+  PermitTunnel no
+  GatewayPorts no
+  AllowAgentForwarding no
+  PermitOpen dokku-00.cs.ucsb.edu:22
+  PermitOpen dokku-01.cs.ucsb.edu:22
+  PermitOpen dokku-02.cs.ucsb.edu:22
+  PermitOpen dokku-03.cs.ucsb.edu:22
+  PermitOpen dokku-04.cs.ucsb.edu:22
+  PermitOpen dokku-05.cs.ucsb.edu:22
+  PermitOpen dokku-06.cs.ucsb.edu:22
+  PermitOpen dokku-07.cs.ucsb.edu:22
+  PermitOpen dokku-08.cs.ucsb.edu:22
+  PermitOpen dokku-09.cs.ucsb.edu:22
+  PermitOpen dokku-10.cs.ucsb.edu:22
+  PermitOpen dokku-11.cs.ucsb.edu:22
+  PermitOpen dokku-12.cs.ucsb.edu:22
+  PermitOpen dokku-13.cs.ucsb.edu:22
+  PermitOpen dokku-14.cs.ucsb.edu:22
+  PermitOpen dokku-15.cs.ucsb.edu:22
+  PermitOpen dokku-16.cs.ucsb.edu:22
+  PermitOpen dokku-17.cs.ucsb.edu:22
+  PermitOpen dokku-18.cs.ucsb.edu:22
+  ForceCommand echo "This account may only be used to deploy Dokku applications."
