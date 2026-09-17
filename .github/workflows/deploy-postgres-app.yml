@@ -55,4 +55,9 @@ jobs:
           REVIEW_APP_NAME: ${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}
           DOCKER_IMAGE: ${{ inputs.docker_image }}
         run: |
+          cat >> ~/.ssh/config <<EOF
+          Host $HOST_URL
+          StrictHostKeyChecking accept-new
+          Port $PORT
+          EOF
           ssh -o "StrictHostKeyChecking=accept-new" -p $PORT -J "actions@$HOST_URL" "actions@$INTERNAL_HOST_URL" "deploy" "$TEMPLATE_APP_NAME" "$REVIEW_APP_NAME" "$DOCKER_IMAGE"
