@@ -10,12 +10,12 @@ if [ "$ACCOUNT_TO_LOGIN_TO" != "dokkudeploy" ]; then
   exit 1
 fi
 
-if ! echo "$SUB" | grep -E 'repo:ucsb-cs156-f26@.*/.*@.*:job_workflow_ref:ucsb-cs156/dokku-review-apps/\.github/workflows/.*@refs/heads/main'; then
+if ! echo "$SUB" | grep -qE 'repo:ucsb-cs156-f26@.*/.*@.*:job_workflow_ref:ucsb-cs156/dokku-review-apps/\.github/workflows/.*@refs/heads/main'; then
   echo "deny"
   exit 1
 fi
 
-SERVER_MATCHED="$(base64 -d "${CLAIMS}" | jq -r ".repository" | grep -oP '.*\-\K(\d+)')"
+SERVER_MATCHED="$(echo "${CLAIMS}" | base64 -d | jq -r ".repository" | grep -oP '.*\-\K(\d+)')"
 
 if [ "$SERVER_HOSTNAME" != "$SERVER_MATCHED" ]; then
   echo "deny"

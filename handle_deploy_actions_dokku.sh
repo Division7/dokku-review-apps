@@ -13,6 +13,8 @@ set +f
 
 set -euo pipefail
 
+export SSH_ORIGINAL_COMMAND=""
+
 if [ "$1" == "deploy" ]; then
   if [[ $# -ne 4 ]]; then
     echo "got $# arguments, expected 4"
