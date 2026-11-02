@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 APP_NAME="${1:-}"
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+source "$SCRIPT_DIR/dokku_review_apps_util.sh"
 
 if ! [[ "$APP_NAME" =~ ^[a-z0-9][a-z0-9.-]*$ ]]; then
   echo "App name does not match Dokku naming regex."
@@ -45,7 +48,7 @@ for DATABASE in $LINKED_DATABASES; do
     dokku postgres:unlink "${DATABASE}" "${APP_NAME}" --no-restart true
   else
     dokku postgres:unlink "${DATABASE}" "${APP_NAME}" --no-restart true
-    dokku postgres:destroy --force "$DATABASE"
+    dokku postgres:destroy "${DATABASE}" --force
   fi
 done
 

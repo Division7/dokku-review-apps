@@ -34,7 +34,7 @@ function release_lock(){
 
 function assert_is_review_app(){
   APP_NAME="${1}"
-  REVIEW_CONFIG_VALUE="$(dokku config:get "${APP_NAME}" REVIEW_MODE))"
+  REVIEW_CONFIG_VALUE="$(dokku config:get "${APP_NAME}" REVIEW_MODE)"
   if [ -z "${REVIEW_CONFIG_VALUE}" ] || [ "${REVIEW_CONFIG_VALUE}" != "true" ]; then
     echo "App ${APP_NAME} does not have REVIEW_MODE=true; Will not update non-review app.";
     return 1;

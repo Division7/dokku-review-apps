@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-TEMPLATE_APP_NAME="${1:-}"
-REVIEW_APP_NAME="${2:-}"
-DOCKER_IMAGE="${3:-}"
+TEMPLATE_APP_NAME="${1:?TEMPLATE_APP_NAME is required}"
+REVIEW_APP_NAME="${2:?REVIEW_APP_NAME is required}"
+DOCKER_IMAGE="${3:?DOCKER_IMAGE is required}"
 
-source dokku_review_apps_util.sh
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+source "$SCRIPT_DIR/dokku_review_apps_util.sh"
+
 #See old CVE fix:
 # https://github.com/dokku/dokku/pull/8590/changes#diff-91e36959c988951c6ce56b86ce7634c08541925a5e55f83e937024af33d4ed88R926
 if ! [[ "$TEMPLATE_APP_NAME" =~ ^[a-z0-9][a-z0-9.-]*$ ]]; then

@@ -42,10 +42,8 @@ jobs:
           REPO: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
         run: |
-          CONCURRENCY_GROUPS=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2026-03-10" "/repos/$REPO/actions/runs/$RUN_ID/concurrency_groups" | jq -r '.concurrency_groups[]')
-          NUMBER_OF_RUNS_IN_GROUP=$(echo "$CONCURRENCY_GROUPS" | jq "select(.group_name | match(\"$CONCURRENCY_GROUP\")) | .group_members | length")
-          
-          if [[ "$NUMBER_OF_RUNS_IN_GROUP" -gt 1 ]]; then
+          CONCURRENCY_GROUPS=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2026-03-10" "/repos/$REPO/actions/concurrency_groups/$CONCURRENCY_GROUP" | jq -r '.group_members | length')
+           if [[ "$CONCURRENCY_GROUPS" -gt 1 ]]; then
             echo "::warning:: There are runs queued after this, exiting early."
             echo "should_continue=false" >> $GITHUB_OUTPUT
           else
