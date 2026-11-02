@@ -16,11 +16,14 @@ set -euo pipefail
 export SSH_ORIGINAL_COMMAND=""
 
 if [ "$1" == "deploy" ]; then
-  if [[ $# -ne 4 ]]; then
-    echo "got $# arguments, expected 4"
+  if [[ $# == 4 ]]; then
+  "$SCRIPT_DIR/deploy_postgres_app.sh" "$2" "$3" "$4"
+  elif [[ $# == 6 ]]; then
+  "$SCRIPT_DIR/deploy_postgres_app.sh" "$2" "$3" "$4" "$5" "$6"
+  else
+    echo "got $# arguments, expected 4 or 6"
     exit 1
   fi
-  exec "$SCRIPT_DIR/deploy_postgres_app.sh" "$2" "$3" "$4"
   exit 0
 fi
 
@@ -29,6 +32,6 @@ if [ "$1" == "teardown" ]; then
     echo "got $# arguments, expected 2"
     exit 1
   fi
-  exec "$SCRIPT_DIR/teardown_app.sh" "$2"
+  "$SCRIPT_DIR/teardown_app.sh" "$2"
   exit 0
 fi

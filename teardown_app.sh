@@ -12,24 +12,30 @@ if ! dokku apps:exists "${APP_NAME}" > /dev/null 2>&1; then
   exit 1;
 fi
 
-REVIEW_CONFIG_VALUE="$(dokku config:get "${APP_NAME}" REVIEW_MODE))"
+assert_is_review_app "$APP_NAME" || exit 1;
 
-if [ -z "${REVIEW_CONFIG_VALUE}" ] || [ "${REVIEW_CONFIG_VALUE}" != "true" ]; then
-  echo "App ${APP_NAME} does not have REVIEW_MODE=true";
-  exit 1;
-fi
+HELD_LOCKS=()
+function cleanup(){
+  if [[ ${#HELD_LOCKS[@]} -eq 0 ]]; then
+    return 0;
+  else
+    for LOCK in "${HELD_LOCKS[@]}"; do
+      release_lock "$LOCK"
+    done
+  fi
+}
 
-#TODO: Add .locks to prevent a concurrent run from screwing with the stuff being changed
-#TODO: Write a sigint handler to clean up .locks in case this is somehow being run manually
 #Or something
 #See here for handler code block: https://www.reddit.com/r/bash/comments/1e8plnu/comment/leddyee
 function sigint_handler() {
-  printf '\nCTRL+C pressed, clean up things before exiting...\n'
-  # reset SIGINT handler to SIG_DFL, then resend signal to self
+  echo "Cleaning up..."
+  cleanup;
   trap - INT
   kill -INT "$$"
 }
 trap sigint_handler INT
+acquire_lock "$APP_NAME" || { cleanup; exit 1; }
+HELD_LOCKS+=("$APP_NAME");
 
 LINKED_DATABASES="$(dokku postgres:app-links "${APP_NAME}")"
 
@@ -57,3 +63,4 @@ done
 
 dokku apps:destroy --force "${APP_NAME}"
 echo "$APP_NAME successfully destroyed."
+cleanup;
