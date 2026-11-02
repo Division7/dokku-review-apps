@@ -45,9 +45,9 @@ jobs:
           
           if [[ "$NUMBER_OF_RUNS_IN_GROUP" -gt 1 ]]; then
             echo "::warning:: There are runs queued after this, exiting early."
-            echo "should_continue=false >> $GITHUB_OUTPUT"
+            echo "should_continue=false" >> $GITHUB_OUTPUT
           else
-            echo "should_continue=true >> $GITHUB_OUTPUT"
+            echo "should_continue=true" >> $GITHUB_OUTPUT
           fi
 
   create-review-app:
