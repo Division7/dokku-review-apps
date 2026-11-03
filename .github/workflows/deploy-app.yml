@@ -67,7 +67,7 @@ jobs:
           initial-status: 'in_progress'
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref || github.ref }}
-          environment-url: ${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}.${{ inputs.host_url }}
+          environment-url: https://${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}.${{ inputs.host_url }}
           environment: ${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}
 
   create-review-app:
