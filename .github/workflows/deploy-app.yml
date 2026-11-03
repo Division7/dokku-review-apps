@@ -58,6 +58,8 @@ jobs:
       deployments: write
     needs: evaluate-queue
     if: ${{ needs.evaluate-queue.outputs.should_continue == 'true' }}
+    outputs:
+      deployment_id: ${{ steps.create-deployment.outputs.deployment_id }}
     steps:
       - name: Create Deployment
         id: create-deployment
@@ -67,7 +69,7 @@ jobs:
           initial-status: 'in_progress'
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref || github.ref }}
-          environment-url: https://${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}.${{ inputs.host_url }}
+          environment-url: ${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}.${{ inputs.host_url }}
           environment: ${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}
 
   create-review-app:
