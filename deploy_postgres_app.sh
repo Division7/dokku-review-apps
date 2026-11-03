@@ -30,6 +30,12 @@ if ! dokku apps:exists "$TEMPLATE_APP_NAME"; then
   exit 1
 fi
 
+IS_TEMPLATE_APP="$(dokku config:get "$TEMPLATE_APP_NAME" IS_TEMPLATE_APP)"
+if [ -z "$IS_TEMPLATE_APP" ] || [ "$IS_TEMPLATE_APP" != "true" ]; then
+  echo "::error::Template app $TEMPLATE_APP_NAME is not configured to be a template app!"
+  exit 1
+fi
+
 HELD_LOCKS=()
 function cleanup(){
   if [[ ${#HELD_LOCKS[@]} -eq 0 ]]; then
