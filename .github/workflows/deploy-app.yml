@@ -8,9 +8,10 @@ on:
       docker_image:
         required: true
         type: string
-    secrets:
-      HOST_URL:
+      host_url:
         required: true
+        type: string
+    secrets:
       PORT:
         required: true
       SSH_USERNAME:
@@ -26,6 +27,7 @@ permissions:
   actions: read
   contents: read
   pull-requests: read
+  deployments: write
 
 jobs:
   evaluate-queue:
@@ -50,13 +52,34 @@ jobs:
             echo "should_continue=true" >> $GITHUB_OUTPUT
           fi
 
+  create-deployment:
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    needs: evaluate-queue
+    if: ${{ needs.evaluate-queue.outputs.should_continue == 'true' }}
+    steps:
+      - name: Create Deployment
+        id: create-deployment
+        uses: chrnorm/deployment-action@v2
+        with:
+          auto-inactive: 'true'
+          initial-status: 'in-progress'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref }}
+          environment-url: ${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}.${{ inputs.host_url }}
+          environment: ${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}
+
   create-review-app:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
       pull-requests: read
-    needs: evaluate-queue
+      deployments: write
+    needs:
+      - evaluate-queue
+      - create-deployment
     if: ${{ needs.evaluate-queue.outputs.should_continue == 'true' }}
     steps:
       - name: Checkout
@@ -71,8 +94,9 @@ jobs:
         run: opkssh login github
 
       - name: SSH into server
+        id: deploy
         env:
-          HOST_URL: ${{ secrets.HOST_URL }}
+          HOST_URL: ${{ inputs.host_url }}
           PORT: ${{ secrets.PORT }}
           TEMPLATE_APP_NAME: ${{ inputs.template_app_name }}
           REVIEW_APP_NAME: ${{ github.event.pull_request.head.repo.name }}-review-${{ github.event.pull_request.number }}
@@ -80,3 +104,19 @@ jobs:
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
         run: |
           ssh -o "StrictHostKeyChecking=accept-new" -p $PORT "$SSH_USERNAME@$HOST_URL" "deploy" "$TEMPLATE_APP_NAME" "$REVIEW_APP_NAME" "$DOCKER_IMAGE"
+
+      - name: Report success
+        if: ${{ steps.deploy.outcome == 'success' }}
+        uses: chrnorm/deployment-status@v2
+        with:
+          deployment-id: ${{ needs.create-deployment.outputs.deployment_id }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          state: success
+
+      - name: Report failure
+        if: ${{ steps.deploy.outcome == 'failure' }}
+        uses: chrnorm/deployment-status@v2
+        with:
+          deployment-id: ${{ needs.create-deployment.outputs.deployment_id }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          state: failure

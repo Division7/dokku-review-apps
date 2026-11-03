@@ -8,9 +8,10 @@ on:
       docker_image:
         required: true
         type: string
-    secrets:
-      HOST_URL:
+      host_url:
         required: true
+        type: string
+    secrets:
       PORT:
         required: true
 
@@ -24,6 +25,7 @@ permissions:
   actions: read
   contents: read
   pull-requests: read
+  deployments: write
 
 jobs:
   evaluate-queue:
@@ -48,13 +50,42 @@ jobs:
             echo "should_continue=true" >> $GITHUB_OUTPUT"
           fi
 
-  create-review-app:
+  find-deployment:
+   runs-on: ubuntu-latest
+   permissions:
+     deployments: write
+   needs: evaluate-queue
+   if: ${{ needs.evaluate-queue.outputs.should_continue == 'true' }}
+   outputs:
+     DEPLOYMENT_NAME: ${{ steps.identify-deployment.outputs.DEPLOYMENT_NAME }}
+     DEPLOYMENT_ID: ${{ steps.identify-deployment.outputs.DEPLOYMENT_ID }}
+   steps:
+     - name: Identify Deployment
+       id: identify-deployment
+       env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         REF: ${{ github.head_ref || github.ref }}
+         REPO: ${{ github.repository }}
+       run: |
+         DEPLOYMENTS=$(gh api \
+         -H "Accept: application/vnd.github+json" \
+         -H "X-GitHub-Api-Version: 2026-03-10" \
+         "/repos/$REPO/deployments?ref=$REF")
+         DEPLOYMENT_ID=$(echo "$DEPLOYMENTS" | jq -r '.[0].id')
+         DEPLOYMENT_NAME=$(echo "$DEPLOYMENTS" | jq -r '.[0].environment')
+         echo "DEPLOYMENT_ID=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+         echo "DEPLOYMENT_NAME=$DEPLOYMENT_NAME" >> $GITHUB_OUTPUT
+
+  teardown-review-app:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
       pull-requests: read
-    needs: evaluate-queue
+      deployments: write
+    needs:
+      - evaluate-queue
+      - find-deployment
     if: ${{ needs.evaluate-queue.outputs.should_continue == 'true' }}
     steps:
       - name: Checkout
@@ -70,8 +101,16 @@ jobs:
 
       - name: SSH into server
         env:
-          HOST_URL: ${{ secrets.HOST_URL }}
+          HOST_URL: ${{ inputs.host_url }}
           PORT: ${{ secrets.PORT }}
-          APP_TO_TEARDOWN: ${{ inputs.app_to_teardown }}
+          APP_TO_TEARDOWN: ${{ needs.find-deployment.outputs.DEPLOYMENT_NAME }}
         run: |
           ssh -o "StrictHostKeyChecking=accept-new" -p $PORT "dokkudeploy@$HOST_URL" "teardown" "$APP_TO_TEARDOWN"
+
+      - name: Tear Down Deployment
+        uses: chrnorm/deployment-status@v2
+        with:
+          deployment-id: ${{ needs.find-deployment.outputs.DEPLOYMENT_ID }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          state: 'inactive'
+
