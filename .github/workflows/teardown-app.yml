@@ -2,17 +2,13 @@ name: teardown-app.yml
 on:
   workflow_call:
     inputs:
-      app_to_teardown:
-        required: true
-        type: string
-      docker_image:
-        required: true
-        type: string
       host_url:
         required: true
         type: string
     secrets:
       PORT:
+        required: true
+      SSH_USERNAME:
         required: true
 
 concurrency:
@@ -111,7 +107,7 @@ jobs:
           PORT: ${{ secrets.PORT }}
           APP_TO_TEARDOWN: ${{ needs.find-deployment.outputs.DEPLOYMENT_NAME }}
         run: |
-          ssh -o "StrictHostKeyChecking=accept-new" -p $PORT "dokkudeploy@$HOST_URL" "teardown" "$APP_TO_TEARDOWN"
+          ssh -o "StrictHostKeyChecking=accept-new" -p $PORT "@$HOST_URL" "teardown" "$APP_TO_TEARDOWN"
 
       - name: Tear Down Deployment
         uses: chrnorm/deployment-status@v2
