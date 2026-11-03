@@ -10,7 +10,7 @@ function acquire_lock(){
 
   if [ ! -d "/var/lock/review-apps" ]; then
     mkdir /var/lock/review-apps
-    chmod -R 744 /var/lock/review-apps
+    chmod -R 777 /var/lock/review-apps
   fi
 
   (set -o noclobber; { true > "/var/lock/review-apps/$LOCK_NAME.lock"; } &> /dev/null)

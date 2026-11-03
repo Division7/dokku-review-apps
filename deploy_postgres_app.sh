@@ -57,7 +57,7 @@ function exit_handler(){
   cleanup;
 }
 trap sigint_handler INT
-trap exit_handler EXIT
+trap exit_handler EXIT SIGHUP
 acquire_lock "$REVIEW_APP_NAME" || { echo "could not acquire lock on $REVIEW_APP_NAME"; exit 1; }
 HELD_LOCKS+=("$REVIEW_APP_NAME");
 LINKED_DATABASES=$(dokku postgres:app-links "$TEMPLATE_APP_NAME")
@@ -135,5 +135,4 @@ if ! dokku git:from-image "$REVIEW_APP_NAME" "$DOCKER_IMAGE" --build; then
   exit 1
 fi
 
-dokku letsencrypt:set "$REVIEW_APP_NAME" email djensen@ucsb.edu
 dokku letsencrypt:enable "$REVIEW_APP_NAME"

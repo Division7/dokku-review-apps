@@ -41,8 +41,9 @@ function exit_handler(){
  echo "Cleaning up..."
  cleanup;
 }
+
 trap sigint_handler INT
-trap exit_handler EXIT
+trap exit_handler EXIT SIGHUP
 acquire_lock "$APP_NAME" || { echo "could not acquire lock on $APP_NAME"; exit 1; }
 HELD_LOCKS+=("$APP_NAME");
 
