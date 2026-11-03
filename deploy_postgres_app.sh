@@ -21,7 +21,7 @@ fi
 
 if dokku apps:exists "$REVIEW_APP_NAME"; then
   assert_is_review_app "$REVIEW_APP_NAME" || exit 1;
-  dokku git:from-image "$REVIEW_APP_NAME" "$DOCKER_IMAGE" --build
+  dokku git:from-image "$REVIEW_APP_NAME" "$DOCKER_IMAGE" --build --force
   exit 0;
 fi
 
@@ -136,7 +136,7 @@ done
 
 dokku config:set "$REVIEW_APP_NAME" REVIEW_MODE=true
 
-if ! dokku git:from-image "$REVIEW_APP_NAME" "$DOCKER_IMAGE" --build; then
+if ! dokku git:from-image "$REVIEW_APP_NAME" "$DOCKER_IMAGE" --build --force; then
   echo "Something went wrong during the build."
   exit 1
 fi
