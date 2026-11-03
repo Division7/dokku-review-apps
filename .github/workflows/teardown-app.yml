@@ -61,7 +61,7 @@ jobs:
      - name: Identify Deployment
        id: identify-deployment
        env:
-         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
          REF: ${{ github.head_ref || github.ref }}
          REPO: ${{ github.repository }}
        run: |
@@ -69,7 +69,7 @@ jobs:
          -H "Accept: application/vnd.github+json" \
          -H "X-GitHub-Api-Version: 2026-03-10" \
          "/repos/$REPO/deployments?ref=$REF")
-         if [ "$(echo "$DEPLOYMENTS" | jq -r '. | length')" == "0"]; then
+         if [ "$(echo "$DEPLOYMENTS" | jq -r 'length')" == "0" ]; then
            echo "HAS_DEPLOYMENT=false" >> $GITHUB_OUTPUT
            exit 0
          fi
