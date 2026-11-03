@@ -52,8 +52,13 @@ function sigint_handler() {
   trap - INT
   kill -INT "$$"
 }
+function exit_handler(){
+  echo "Cleaning up..."
+  cleanup;
+}
 trap sigint_handler INT
-acquire_lock "$REVIEW_APP_NAME" || { cleanup; exit 1; }
+trap exit_handler EXIT
+acquire_lock "$REVIEW_APP_NAME" || { echo "could not acquire lock on $REVIEW_APP_NAME"; exit 1; }
 HELD_LOCKS+=("$REVIEW_APP_NAME");
 LINKED_DATABASES=$(dokku postgres:app-links "$TEMPLATE_APP_NAME")
 DB_COUNT=$(echo "$LINKED_DATABASES" | wc -l)
@@ -66,7 +71,7 @@ elif [[ "$DB_COUNT" -gt 1 ]]; then
   DB_COUNTER=1
   for DATABASE_NAME in $LINKED_DATABASES; do
     CLONED_DB_NAME="${REVIEW_APP_NAME}-db-${DB_COUNTER}"
-    acquire_lock "$CLONED_DB_NAME" || { cleanup; exit 1; }
+    acquire_lock "$CLONED_DB_NAME" || { echo "could not acquire lock on $CLONED_DB_NAME"; exit 1; }
     HELD_LOCKS+=("$CLONED_DB_NAME")
     dokku postgres:clone "$DATABASE_NAME" "$CLONED_DB_NAME"
     CLONED_DATABASES+=("$CLONED_DB_NAME")
@@ -76,7 +81,7 @@ else
   for DATABASE_NAME in $LINKED_DATABASES; do
     echo cloning "$DATABASE_NAME"
     CLONED_DB_NAME="${REVIEW_APP_NAME}-db"
-    acquire_lock "$CLONED_DB_NAME" || { cleanup; exit 1; }
+    acquire_lock "$CLONED_DB_NAME" || { echo "could not acquire lock on $CLONED_DB_NAME"; exit 1; }
     HELD_LOCKS+=("$CLONED_DB_NAME")
     dokku postgres:clone "$DATABASE_NAME" "$CLONED_DB_NAME"
     CLONED_DATABASES+=("$CLONED_DB_NAME")
@@ -92,7 +97,7 @@ if [[ "$MONGO_COUNT" -gt 1 ]]; then
   MONGO_COUNTER=1
   for MONGO_NAME in $LINKED_MONGOS; do
     CLONED_MONGO_NAME="${REVIEW_APP_NAME}-mongo-${MONGO_NAME}"
-    acquire_lock "$CLONED_MONGO_NAME" || { cleanup; exit 1; }
+    acquire_lock "$CLONED_MONGO_NAME" || { echo "could not acquire lock on $CLONED_MONGO_NAME"; exit 1; }
     HELD_LOCKS+=("$CLONED_MONGO_NAME")
     dokku mongo:clone "$MONGO_NAME" "$CLONED_MONGO_NAME"
     CLONED_MONGOS+=("$CLONED_MONGO_NAME")
@@ -102,7 +107,7 @@ else
   for MONGO_NAME in $LINKED_MONGOS; do
     echo cloning "$MONGO_NAME"
     CLONED_MONGO_NAME="${REVIEW_APP_NAME}-mongo"
-    acquire_lock "$CLONED_MONGO_NAME" || { cleanup; exit 1; }
+    acquire_lock "$CLONED_MONGO_NAME" || { echo "could not acquire lock on $CLONED_MONGO_NAME"; exit 1; }
     HELD_LOCKS+=("$CLONED_MONGO_NAME")
     dokku mongo:clone "$MONGO_NAME" "$CLONED_MONGO_NAME"
     CLONED_MONGOS+=("$CLONED_MONGO_NAME")
@@ -127,11 +132,8 @@ dokku config:set "$REVIEW_APP_NAME" REVIEW_MODE=true
 
 if ! dokku git:from-image "$REVIEW_APP_NAME" "$DOCKER_IMAGE" --build; then
   echo "Something went wrong during the build."
-  cleanup
   exit 1
 fi
 
 dokku letsencrypt:set "$REVIEW_APP_NAME" email djensen@ucsb.edu
 dokku letsencrypt:enable "$REVIEW_APP_NAME"
-
-cleanup

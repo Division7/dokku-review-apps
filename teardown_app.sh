@@ -36,8 +36,14 @@ function sigint_handler() {
   trap - INT
   kill -INT "$$"
 }
+
+function exit_handler(){
+ echo "Cleaning up..."
+ cleanup;
+}
 trap sigint_handler INT
-acquire_lock "$APP_NAME" || { cleanup; exit 1; }
+trap exit_handler EXIT
+acquire_lock "$APP_NAME" || { echo "could not acquire lock on $APP_NAME"; exit 1; }
 HELD_LOCKS+=("$APP_NAME");
 
 LINKED_DATABASES="$(dokku postgres:app-links "${APP_NAME}")"
