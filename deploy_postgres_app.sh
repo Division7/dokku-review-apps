@@ -125,7 +125,11 @@ done
 
 dokku config:set "$REVIEW_APP_NAME" REVIEW_MODE=true
 
-dokku git:from-image "$REVIEW_APP_NAME" "$DOCKER_IMAGE" --build
+if ! dokku git:from-image "$REVIEW_APP_NAME" "$DOCKER_IMAGE" --build; then
+  echo "Something went wrong during the build."
+  cleanup
+  exit 1
+fi
 
 dokku letsencrypt:set "$REVIEW_APP_NAME" email djensen@ucsb.edu
 dokku letsencrypt:enable "$REVIEW_APP_NAME"
